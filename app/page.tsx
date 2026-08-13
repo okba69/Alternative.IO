@@ -1,115 +1,197 @@
+'use client';
+
+import { useMemo, useState } from 'react';
 import { WaitlistForm } from '@/components/WaitlistForm';
 
-const FEATURES = [
+const CATEGORIES = ['Tous', 'Productivité', 'Création', 'Développement'];
+
+const PREVIEW_ALTERNATIVES = [
   {
-    icon: '🔍',
-    title: 'Le mot « gratuit » enfin expliqué',
-    description:
-      'Free, freemium, open source, auto-hébergé, essai temporaire… chaque fiche précise le statut tarifaire exact et ce qui te coûtera quelque chose plus tard.',
+    name: 'Handy',
+    replaces: 'Wispr Flow',
+    category: 'Productivité',
+    status: 'Gratuit',
+    tone: 'mint',
+    description: 'Une piste gratuite pour transformer la voix en texte au quotidien.',
+    tags: ['Voix', 'Desktop'],
   },
   {
-    icon: '✅',
-    title: 'Vérifié, pas juste posté',
-    description:
-      'Chaque fiche affiche un niveau de confiance et une date de vérification. Les informations obsolètes sont signalées, jamais cachées.',
+    name: 'Penpot',
+    replaces: 'Figma',
+    category: 'Création',
+    status: 'Open source',
+    tone: 'amber',
+    description: 'Conception collaborative avec un modèle ouvert et auto hébergeable.',
+    tags: ['Design', 'Web'],
   },
   {
-    icon: '⚖️',
-    title: 'Comparaison honnête',
-    description:
-      'Compare deux ou trois alternatives côte à côte sur les mêmes critères. Aucun classement sponsorisé, aucun gagnant déclaré automatiquement.',
+    name: 'AppFlowy',
+    replaces: 'Notion',
+    category: 'Productivité',
+    status: 'Open source',
+    tone: 'blue',
+    description: 'Un espace de travail flexible pour garder ses notes et projets sous contrôle.',
+    tags: ['Notes', 'Open source'],
+  },
+  {
+    name: 'Bruno',
+    replaces: 'Postman',
+    category: 'Développement',
+    status: 'Gratuit',
+    tone: 'coral',
+    description: 'Un client API pensé pour rester local, rapide et versionnable.',
+    tags: ['API', 'Local'],
   },
 ];
 
-const STEPS = [
+const PRINCIPLES = [
   {
-    number: '1',
-    title: 'Cherche ton outil payant',
-    description: 'Par nom, catégorie ou besoin — Notion, Figma, Airtable, et bien d’autres.',
+    number: '01',
+    title: 'Le statut réel',
+    text: 'Gratuit, freemium, open source ou essai. Le modèle tarifaire est nommé sans raccourci.',
   },
   {
-    number: '2',
-    title: 'Compare les alternatives vérifiées',
-    description: 'Fonctions couvertes, limites, plateformes, mode d’installation, tout au même endroit.',
+    number: '02',
+    title: 'Les limites visibles',
+    text: 'Quotas, fonctions manquantes, hébergement et coûts cachés restent au premier plan.',
   },
   {
-    number: '3',
-    title: 'Contribue si tu connais une pépite',
-    description: 'Ta suggestion est revue avant publication — la communauté propose, la modération valide.',
+    number: '03',
+    title: 'La vérification humaine',
+    text: 'La communauté propose. Une revue précède la publication et conserve une trace de la décision.',
   },
 ];
 
 export default function Home() {
+  const [activeCategory, setActiveCategory] = useState('Tous');
+  const [query, setQuery] = useState('');
+
+  const filteredAlternatives = useMemo(() => {
+    return PREVIEW_ALTERNATIVES.filter((alternative) => {
+      const matchesCategory = activeCategory === 'Tous' || alternative.category === activeCategory;
+      const normalizedQuery = query.trim().toLowerCase();
+      const matchesQuery =
+        !normalizedQuery ||
+        alternative.name.toLowerCase().includes(normalizedQuery) ||
+        alternative.replaces.toLowerCase().includes(normalizedQuery) ||
+        alternative.description.toLowerCase().includes(normalizedQuery);
+      return matchesCategory && matchesQuery;
+    });
+  }, [activeCategory, query]);
+
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-6">
-        <span className="text-lg font-bold">Alternative.IO</span>
+    <div className="site-shell">
+      <header className="site-header">
+        <a className="brand" href="#top" aria-label="Alternative.IO accueil">
+          <span className="brand-mark">A</span>
+          <span>Alternative<span className="brand-dot">.</span>IO</span>
+        </a>
+        <nav className="desktop-nav" aria-label="Navigation principale">
+          <a href="#catalogue">Le catalogue</a>
+          <a href="#methode">Notre méthode</a>
+          <a href="#contribuer">Contribuer</a>
+        </nav>
+        <a className="header-cta" href="#rejoindre">Rejoindre la liste</a>
       </header>
 
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6 py-16 text-center sm:py-24">
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-            🚧 Bientôt disponible
-          </span>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            Trouve la bonne alternative gratuite, sans le flou.
-          </h1>
-          <p className="max-w-xl text-lg text-zinc-600 dark:text-zinc-400">
-            Alternative.IO est le catalogue communautaire des vraies alternatives gratuites,
-            freemium, open source ou auto-hébergées aux outils payants — avec le statut
-            tarifaire exact, les limites connues et une date de vérification. Pas de blabla
-            marketing, pas de classement sponsorisé.
-          </p>
-          <WaitlistForm />
-          <p className="text-xs text-zinc-400 dark:text-zinc-500">
-            Pas de spam. Un email quand c’est prêt, rien d’autre.
-          </p>
-        </section>
-
-        {/* Features */}
-        <section className="mx-auto grid max-w-5xl gap-8 px-6 py-16 sm:grid-cols-3">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="flex flex-col gap-2">
-              <span className="text-2xl">{f.icon}</span>
-              <h3 className="font-semibold">{f.title}</h3>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">{f.description}</p>
+      <main id="top">
+        <section className="hero-section">
+          <div className="hero-copy">
+            <p className="eyebrow"><span className="eyebrow-dot" /> Le catalogue qui remet la clarté au centre</p>
+            <h1>Arrête de payer pour un outil que tu peux <em>remplacer.</em></h1>
+            <p className="hero-lede">
+              Alternative.IO t’aide à trouver des solutions gratuites, open source ou simplement plus justes pour ton usage. Avec les vraies limites, les sources et les retours de ceux qui les utilisent.
+            </p>
+            <div className="hero-actions">
+              <a className="button button-primary" href="#rejoindre">Découvrir le catalogue <span>↗</span></a>
+              <a className="text-link" href="#catalogue">Voir un aperçu <span>↓</span></a>
             </div>
-          ))}
-        </section>
-
-        {/* Comment ça marche */}
-        <section className="border-t border-zinc-200 px-6 py-16 dark:border-zinc-800">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-center text-2xl font-bold">Comment ça marche</h2>
-            <div className="mt-10 grid gap-8 sm:grid-cols-3">
-              {STEPS.map((s) => (
-                <div key={s.number} className="flex flex-col gap-2 text-center sm:text-left">
-                  <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white sm:mx-0">
-                    {s.number}
-                  </span>
-                  <h3 className="font-semibold">{s.title}</h3>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.description}</p>
-                </div>
-              ))}
+            <div className="hero-note"><span className="note-icon">✦</span> Pas de classement sponsorisé. Pas de promesse floue.</div>
+          </div>
+          <div className="hero-art" aria-label="Aperçu d'une recherche Alternative.IO">
+            <div className="orbit orbit-one" />
+            <div className="orbit orbit-two" />
+            <div className="hero-card hero-card-main">
+              <div className="card-topline"><span className="status-live"><span /> Aperçu du produit</span><span className="card-menu">•••</span></div>
+              <div className="search-preview"><span>⌕</span><span>Je cherche une alternative à...</span><b>⌘ K</b></div>
+              <div className="preview-result-label">Résultats pour <strong>Wispr Flow</strong></div>
+              <div className="mini-result">
+                <span className="mini-logo mini-logo-mint">H</span>
+                <span className="mini-result-copy"><strong>Handy</strong><small>Gratuit · Voix · Desktop</small></span>
+                <span className="confidence">Vérifié</span>
+              </div>
+              <div className="mini-result">
+                <span className="mini-logo mini-logo-blue">V</span>
+                <span className="mini-result-copy"><strong>VoiceInk</strong><small>Open source · macOS</small></span>
+                <span className="confidence confidence-muted">À revoir</span>
+              </div>
+              <div className="preview-footer"><span>Comparer les limites</span><span>→</span></div>
             </div>
+            <div className="floating-tag floating-tag-top"><span className="tag-check">✓</span> Limites visibles</div>
+            <div className="floating-tag floating-tag-bottom"><span className="tag-spark">✦</span> Vérifié par la communauté</div>
           </div>
         </section>
 
-        {/* CTA final */}
-        <section className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6 py-16 text-center">
-          <h2 className="text-2xl font-bold">Rejoins la liste d’attente</h2>
-          <p className="max-w-md text-zinc-600 dark:text-zinc-400">
-            Sois prévenu dès l’ouverture du catalogue, et aide-nous à choisir les premières
-            catégories à couvrir.
-          </p>
-          <WaitlistForm />
+        <section className="signal-strip" aria-label="Promesse du produit">
+          <span>Moins de dépenses inutiles</span><i />
+          <span>Plus de décisions éclairées</span><i />
+          <span>Une communauté qui partage vraiment</span>
+        </section>
+
+        <section className="catalogue-section section-wrap" id="catalogue">
+          <div className="section-heading split-heading">
+            <div>
+              <p className="eyebrow">01 / Le catalogue</p>
+              <h2>Une meilleure option commence par une meilleure comparaison.</h2>
+            </div>
+            <p>Un aperçu de l’expérience que nous construisons. Chaque fiche donne le contexte nécessaire pour choisir, pas seulement un lien à cliquer.</p>
+          </div>
+          <div className="catalogue-window">
+            <div className="window-bar"><span className="window-dots"><i /><i /><i /></span><span className="window-title">alternative.io / explorer</span><span className="window-lock">⌁ privé par défaut</span></div>
+            <div className="catalogue-toolbar">
+              <label className="catalogue-search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Chercher un outil ou un besoin" aria-label="Chercher un outil ou un besoin" /></label>
+              <div className="category-tabs" role="tablist" aria-label="Catégories">
+                {CATEGORIES.map((category) => (
+                  <button key={category} className={activeCategory === category ? 'category-tab active' : 'category-tab'} onClick={() => setActiveCategory(category)} role="tab" aria-selected={activeCategory === category}>{category}</button>
+                ))}
+              </div>
+            </div>
+            <div className="result-grid">
+              {filteredAlternatives.map((alternative) => (
+                <article className="alternative-card" key={alternative.name}>
+                  <div className="alternative-card-top"><span className={`alternative-logo ${alternative.tone}`}>{alternative.name.slice(0, 1)}</span><span className="verified-label">✓ Vérifié</span></div>
+                  <p className="replaces-label">Remplace <strong>{alternative.replaces}</strong></p>
+                  <h3>{alternative.name}</h3>
+                  <p className="alternative-description">{alternative.description}</p>
+                  <div className="alternative-meta"><span className="pricing-label">{alternative.status}</span>{alternative.tags.map((tag) => <span className="meta-tag" key={tag}>{tag}</span>)}</div>
+                </article>
+              ))}
+            </div>
+            {filteredAlternatives.length === 0 && <p className="empty-preview">Aucune fiche dans cet aperçu. Essaie une autre recherche.</p>}
+            <div className="catalogue-bottom"><span><b>{filteredAlternatives.length}</b> fiches dans cet aperçu</span><span className="preview-disclaimer">Données de démonstration</span></div>
+          </div>
+        </section>
+
+        <section className="method-section section-wrap" id="methode">
+          <div className="section-heading narrow-heading"><p className="eyebrow">02 / Notre méthode</p><h2>Le gratuit n’est pas un argument. C’est une information à expliquer.</h2></div>
+          <div className="principles-grid">
+            {PRINCIPLES.map((principle) => <article className="principle" key={principle.number}><span className="principle-number">{principle.number}</span><h3>{principle.title}</h3><p>{principle.text}</p></article>)}
+          </div>
+        </section>
+
+        <section className="contribute-section section-wrap" id="contribuer">
+          <div className="contribute-panel">
+            <div className="contribute-copy"><p className="eyebrow">03 / La communauté</p><h2>Tu connais une pépite ? Ne la garde pas pour toi.</h2><p>Les meilleures alternatives sont souvent découvertes par l’usage. Partage une solution, une limite ou une astuce. La communauté propose, la modération vérifie.</p><a className="button button-light" href="#rejoindre">Être informé du lancement <span>↗</span></a></div>
+            <div className="contribute-stack" aria-hidden="true"><div className="stack-card stack-card-back" /><div className="stack-card stack-card-middle" /><div className="stack-card stack-card-front"><span className="stack-plus">＋</span><strong>Ajouter une astuce</strong><small>Une contribution utile commence ici</small></div></div>
+          </div>
+        </section>
+
+        <section className="join-section section-wrap" id="rejoindre">
+          <div className="join-content"><p className="eyebrow">Bientôt disponible</p><h2>Les bons outils ne devraient pas être réservés à ceux qui peuvent tout payer.</h2><p>Inscris-toi pour suivre le lancement et nous aider à choisir les premières catégories du catalogue.</p><WaitlistForm /><small>Un seul email au lancement. Aucun spam.</small></div>
         </section>
       </main>
 
-      <footer className="border-t border-zinc-200 px-6 py-8 text-center text-xs text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
-        © {new Date().getFullYear()} Alternative.IO. Tous droits réservés.
-      </footer>
+      <footer className="site-footer"><a className="brand" href="#top"><span className="brand-mark">A</span><span>Alternative<span className="brand-dot">.</span>IO</span></a><span>Le catalogue communautaire des alternatives qui ont du sens.</span><span>© {new Date().getFullYear()} Alternative.IO</span></footer>
     </div>
   );
 }
