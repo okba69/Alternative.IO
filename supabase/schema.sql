@@ -3,6 +3,7 @@
 -- À exécuter dans Supabase > SQL Editor > Run.
 -- Les contributions et requests sont publiques après authentification Google.
 -- La modération est volontairement hors périmètre du MVP initial.
+-- La promotion admin reste une opération explicite dans SQL Editor.
 -- =========================================================================
 
 create extension if not exists pgcrypto;
@@ -38,6 +39,38 @@ $$;
 revoke all on function public.is_admin() from public;
 grant execute on function public.is_admin() to authenticated;
 
+-- Le rôle ne peut jamais être augmenté depuis l’espace utilisateur. La
+-- promotion initiale doit être faite manuellement par le propriétaire du
+-- projet dans SQL Editor.
+create or replace function public.current_profile_role()
+returns text
+language sql
+stable
+security definer set search_path = public
+as $$
+  select role from public.profiles where id = auth.uid();
+$$;
+
+revoke all on function public.current_profile_role() from public;
+grant execute on function public.current_profile_role() to authenticated;
+
+create or replace function public.prevent_profile_role_escalation()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if new.role is distinct from old.role and not public.is_admin() then
+    raise exception 'profile role changes require an existing admin';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_profile_role on profiles;
+create trigger protect_profile_role
+before update on profiles
+for each row execute procedure public.prevent_profile_role_escalation();
 drop policy if exists "profiles_owner_read" on profiles;
 create policy "profiles_owner_read" on profiles
   for select to authenticated
@@ -47,7 +80,7 @@ drop policy if exists "profiles_owner_update" on profiles;
 create policy "profiles_owner_update" on profiles
   for update to authenticated
   using (auth.uid() = id)
-  with check (auth.uid() = id);
+  with check (auth.uid() = id and role = public.current_profile_role());
 
 drop policy if exists "profiles_admin_read" on profiles;
 create policy "profiles_admin_read" on profiles
