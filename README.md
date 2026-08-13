@@ -1,60 +1,64 @@
-# Alternative.IO — Landing page & liste d'attente
+# UseInstead
 
-Landing page Next.js pour valider l'intérêt avant de construire le produit décrit
-dans [`PRD.md`](./PRD.md) : un catalogue communautaire d'alternatives gratuites,
-freemium, open source ou auto-hébergées aux outils payants.
+UseInstead est un catalogue communautaire d’alternatives aux outils payants. Le MVP permet de rechercher des comparaisons, filtrer le catalogue, consulter les requests, proposer une alternative et accéder à un espace utilisateur.
 
-## Mise en route
+## Développement local
 
-### 1. Installer les dépendances
 ```bash
 npm install
+npm run dev
 ```
 
-### 2. Créer le projet Supabase (pour stocker les emails de la liste d'attente)
-1. Sur [supabase.com](https://supabase.com), crée un projet (plan gratuit).
-2. **SQL Editor** → **New query** → colle le contenu de `supabase/schema.sql` → **Run**.
-3. **Project Settings → API** → note :
-   - **Project URL** → `SUPABASE_URL`
-   - clé **`service_role`** (secrète) → `SUPABASE_SERVICE_ROLE_KEY`
+L’application est ensuite disponible sur `http://localhost:3000`.
 
-### 3. Variables d'environnement
-Crée un fichier `.env.local` :
+## Configuration Supabase
+
+1. Créer ou sélectionner le projet Supabase.
+2. Exécuter [`supabase/schema.sql`](./supabase/schema.sql) dans SQL Editor.
+3. Configurer Google dans Supabase Auth avec l’URL de callback suivante :
+
+```text
+https://useinstead.xyz/auth/callback
+```
+
+Variables publiques nécessaires au navigateur :
+
+```text
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
+
+La route serveur de liste d’attente utilise séparément les variables serveur déjà prévues :
+
+```text
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+```
+
+La clé `SUPABASE_SERVICE_ROLE_KEY` est strictement serveur. Elle ne doit jamais être exposée dans le navigateur, le dépôt ou les logs.
+
+## Tests et validation
+
 ```bash
-SUPABASE_URL=...
-SUPABASE_SERVICE_ROLE_KEY=...
+npm test
+npm run lint
+npm run build
+git diff --check
 ```
 
-### 4. Lancer en local
-```bash
-npm run dev           # http://localhost:3000
-```
+## Structure principale
 
-### 5. Déployer sur Vercel
-1. Pousse le repo sur GitHub (déjà fait si tu lis ce fichier depuis GitHub).
-2. Sur [vercel.com](https://vercel.com) → **Import Project** → sélectionne le repo.
-3. Dans **Environment Variables**, ajoute `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` → **Deploy**.
-
-## Structure
-
-| Fichier | Rôle |
+| Chemin | Rôle |
 |---|---|
-| `app/page.tsx` | Landing page (hero, bénéfices, comment ça marche, CTA) |
-| `components/WaitlistForm.tsx` | Formulaire d'inscription (client) avec honeypot anti-spam |
-| `app/api/waitlist/route.ts` | Route API qui valide et enregistre l'email |
-| `lib/supabase.ts` | Client Supabase + validation email + insertion idempotente |
-| `supabase/schema.sql` | Table `waitlist_signups` |
-| `PRD.md` | Spécification produit complète du MVP à construire ensuite |
+| `app/page.tsx` | Accueil et exploration du catalogue |
+| `app/catalogue` | Catalogue complet et détails des comparaisons |
+| `app/requests` | Requests et détails des demandes |
+| `app/account` | Espace utilisateur authentifié |
+| `app/admin` | Espace administrateur protégé par le rôle Supabase |
+| `app/auth/callback` | Retour OAuth Google |
+| `components` | Interfaces Catalogue, Requests, Auth, compte et admin |
+| `lib` | Clients Supabase, modèles et règles métier |
+| `supabase/schema.sql` | Tables, rôles, fonction admin et politiques RLS |
+| `tests` | Tests de catalogue, requests, accès et pages secondaires |
 
-## Personnaliser le texte
-
-Tout le contenu éditorial (accroche, bénéfices, étapes) est dans `app/page.tsx`,
-dans les tableaux `FEATURES` et `STEPS` en haut du fichier — facile à modifier
-sans toucher au reste.
-
-## Consulter les emails inscrits
-
-Dans Supabase → **Table Editor** → `waitlist_signups`, ou via SQL :
-```sql
-select email, created_at from waitlist_signups order by created_at desc;
-```
+Les fichiers `.env*` sont ignorés par Git. Ne jamais committer de secret.
