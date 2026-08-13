@@ -30,7 +30,7 @@ export async function addToWaitlist(email: string): Promise<{ alreadyRegistered:
   const { error } = await getSupabase().from('waitlist_signups').insert({ email: normalized });
   if (error) {
     if (error.code === '23505') return { alreadyRegistered: true }; // violation de contrainte unique
-    throw new Error(`Inscription à la liste d'attente échouée : ${error.message}`);
+    throw new Error('Inscription à la liste d’attente échouée.');
   }
   return { alreadyRegistered: false };
 }
