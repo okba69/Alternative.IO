@@ -1,0 +1,66 @@
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { GoogleAuthButton } from '@/components/GoogleAuthButton';
+import { getBrowserSupabase } from '@/lib/supabase-browser';
+import { isAdminRole } from '@/lib/access';
+
+type AdminProfile = { id: string; display_name: string | null; role: string; created_at: string };
+type AdminPair = { id: string; paid_name: string; alternative_name: string; category: string; created_at: string };
+type AdminRequest = { id: string; title: string; category: string; created_at: string };
+
+export function AdminPage() {
+  const [role, setRole] = useState<string | null>(null);
+  const [profiles, setProfiles] = useState<AdminProfile[]>([]);
+  const [pairs, setPairs] = useState<AdminPair[]>([]);
+  const [requests, setRequests] = useState<AdminRequest[]>([]);
+  const [state, setState] = useState<'loading' | 'ready' | 'signed-out' | 'forbidden' | 'unavailable'>('loading');
+  const [message, setMessage] = useState('');
+
+  async function loadAdmin() {
+    try {
+      const supabase = getBrowserSupabase();
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) { setState('signed-out'); return; }
+      const { data: profileData, error: profileError } = await supabase.from('profiles').select('id,display_name,role,created_at').eq('id', userData.user.id).maybeSingle();
+      if (profileError) throw profileError;
+      const profile = profileData as AdminProfile | null;
+      setRole(profile?.role ?? 'user');
+      if (!isAdminRole(profile?.role)) { setState('forbidden'); return; }
+      const [profilesResult, pairsResult, requestsResult] = await Promise.all([
+        supabase.from('profiles').select('id,display_name,role,created_at').order('created_at', { ascending: false }),
+        supabase.from('alternative_pairs').select('id,paid_name,alternative_name,category,created_at').order('created_at', { ascending: false }),
+        supabase.from('requests').select('id,title,category,created_at').order('created_at', { ascending: false }),
+      ]);
+      if (profilesResult.error || pairsResult.error || requestsResult.error) throw profilesResult.error || pairsResult.error || requestsResult.error;
+      setProfiles((profilesResult.data ?? []) as AdminProfile[]); setPairs((pairsResult.data ?? []) as AdminPair[]); setRequests((requestsResult.data ?? []) as AdminRequest[]); setState('ready');
+    } catch { setState('unavailable'); }
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void loadAdmin(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  async function deletePair(id: string) {
+    if (!window.confirm('Supprimer cette comparaison du catalogue ?')) return;
+    const { error } = await getBrowserSupabase().from('alternative_pairs').delete().eq('id', id);
+    if (error) { setMessage('Suppression refusée ou indisponible.'); return; }
+    setPairs((items) => items.filter((item) => item.id !== id));
+  }
+
+  async function deleteRequest(id: string) {
+    if (!window.confirm('Supprimer cette request et ses réponses ?')) return;
+    const { error } = await getBrowserSupabase().from('requests').delete().eq('id', id);
+    if (error) { setMessage('Suppression refusée ou indisponible.'); return; }
+    setRequests((items) => items.filter((item) => item.id !== id));
+  }
+
+  if (state === 'loading') return <main className="admin-page"><p className="empty-preview">Vérification des droits admin…</p></main>;
+  if (state === 'signed-out') return <main className="admin-page"><section className="account-empty"><p className="account-kicker">USEINSTEAD / ADMIN</p><h1>Connexion Google requise.</h1><GoogleAuthButton /><Link href="/">← Retour au catalogue</Link></section></main>;
+  if (state === 'forbidden') return <main className="admin-page"><section className="account-empty"><p className="account-kicker">USEINSTEAD / ADMIN</p><h1>Accès réservé aux administrateurs.</h1><p>Ton compte possède actuellement le rôle : {role || 'user'}.</p><Link href="/account">Ouvrir mon espace utilisateur</Link></section></main>;
+  if (state === 'unavailable') return <main className="admin-page"><section className="account-empty"><p className="account-kicker">USEINSTEAD / ADMIN</p><h1>L’administration attend la configuration.</h1><p>La connexion Google, le schéma Supabase et le rôle admin doivent être confirmés avant l’ouverture de cet espace.</p><GoogleAuthButton /><Link className="account-link" href="/">← Retour au catalogue</Link></section></main>;
+
+  return <main className="admin-page"><header className="admin-header"><div><Link className="account-back" href="/">← Catalogue</Link><p className="account-kicker">USEINSTEAD / ADMIN</p><h1>Pilotage du catalogue.</h1><p>Gestion réservée aux profils admin vérifiés par Supabase.</p></div><Link className="account-link" href="/account">Mon espace utilisateur ↗</Link></header><div className="account-stats"><div><strong>{pairs.length}</strong><span>Comparaisons</span></div><div><strong>{requests.length}</strong><span>Requests</span></div><div><strong>{profiles.length}</strong><span>Profils</span></div></div>{message && <p className="form-error dark-error">{message}</p>}<section className="admin-section"><div className="account-section-heading"><div><p className="account-kicker">01 / Catalogue</p><h2>Comparaisons publiées</h2></div></div><div className="admin-table">{pairs.map((item) => <div className="admin-row" key={item.id}><span><strong>{item.paid_name} → {item.alternative_name}</strong><small>{item.category}</small></span><Link href={`/catalogue/${item.id}`}>Voir</Link><button type="button" onClick={() => void deletePair(item.id)}>Supprimer</button></div>)}{pairs.length === 0 && <p className="account-empty-line">Aucune comparaison persistée.</p>}</div></section><section className="admin-section"><div className="account-section-heading"><div><p className="account-kicker">02 / Requests</p><h2>Demandes ouvertes</h2></div></div><div className="admin-table">{requests.map((item) => <div className="admin-row" key={item.id}><span><strong>{item.title}</strong><small>{item.category}</small></span><Link href={`/requests/${item.id}`}>Voir</Link><button type="button" onClick={() => void deleteRequest(item.id)}>Supprimer</button></div>)}{requests.length === 0 && <p className="account-empty-line">Aucune request persistée.</p>}</div></section><section className="admin-section"><div className="account-section-heading"><div><p className="account-kicker">03 / Profils</p><h2>Utilisateurs</h2></div></div><div className="admin-table">{profiles.map((item) => <div className="admin-row" key={item.id}><span><strong>{item.display_name || 'Profil sans nom'}</strong><small>{new Date(item.created_at).toLocaleDateString('fr-FR')}</small></span><b>{item.role}</b></div>)}</div></section></main>;
+}

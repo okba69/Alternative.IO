@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Alternative.IO — Trouve la bonne alternative gratuite",
+  title: "UseInstead — Trouve une meilleure alternative",
   description:
-    "Le catalogue communautaire des vraies alternatives gratuites, freemium, open source ou auto-hébergées aux outils payants — statut tarifaire précis, limites et date de vérification.",
+    "UseInstead compare les outils payants avec des alternatives gratuites, open source ou freemium. Catalogue, requests et contributions communautaires.",
 };
 
 export default function RootLayout({
