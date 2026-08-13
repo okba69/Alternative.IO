@@ -22,7 +22,11 @@ export async function POST(req: Request) {
   try {
     const { alreadyRegistered } = await addToWaitlist(email);
     return Response.json({ ok: true, alreadyRegistered });
-  } catch (e) {
-    return Response.json({ error: (e as Error).message }, { status: 500 });
+  } catch {
+    // Ne jamais exposer l’URL, le nom de table ou les détails Supabase au client.
+    return Response.json(
+      { error: 'Inscription momentanément indisponible. Réessaie dans quelques instants.' },
+      { status: 503 },
+    );
   }
 }
