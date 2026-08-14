@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { CatalogueExplorer } from '@/components/CatalogueExplorer';
 
@@ -22,7 +21,7 @@ export default function Home() {
           </div>
           <div className="milo-hero-art" aria-label="Milo, le guide UseInstead">
             <div className="milo-art-label"><span>MILO</span><span>01 / 09</span></div>
-            <Image src="/illustrations/milo.png" alt="Milo, personnage illustré de UseInstead" fill sizes="(max-width: 800px) 88vw, 36vw" priority />
+            <div className="milo-hero-character" role="img" aria-label="Milo, personnage illustré de UseInstead" />
             <div className="milo-speech">Je garde le fil.<br /><strong>Tu gardes le contrôle.</strong></div>
           </div>
         </section>

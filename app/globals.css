@@ -85,7 +85,7 @@ button { cursor: pointer; }
 .milo-hero-art { background: #eeece5; border: 2px solid #1a1b19; border-radius: 34px; min-height: 535px; overflow: hidden; position: relative; }
 .milo-hero-art::before { background-image: radial-gradient(#c9c8c1 1px, transparent 1px); background-size: 12px 12px; content: ''; inset: 0; opacity: .48; position: absolute; }
 .milo-art-label { color: #676761; display: flex; font-family: 'DM Mono', monospace; font-size: 11px; justify-content: space-between; left: 24px; letter-spacing: .1em; position: absolute; right: 24px; top: 22px; z-index: 2; }
-.milo-hero-art img { bottom: -36px; filter: contrast(1.04); height: 88%; left: 50%; object-fit: contain; object-position: bottom center; position: absolute; right: auto; top: auto; transform: translateX(-50%); width: 82%; z-index: 1; }
+.milo-hero-character { background: url('/illustrations/milo.png') center bottom / contain no-repeat; bottom: -36px; height: 88%; left: 50%; position: absolute; transform: translateX(-50%); width: 82%; z-index: 1; }
 .milo-speech { background: #fff; border: 2px solid #1a1b19; border-radius: 22px; bottom: 24px; font-size: 16px; left: 24px; line-height: 1.25; padding: 13px 17px; position: absolute; z-index: 3; }
 .milo-speech strong { font-weight: 600; }
 .milo-catalogue-intro { align-items: end; border-top: 1px solid #cbc9c0; display: flex; gap: 40px; justify-content: space-between; margin: 0 auto; max-width: 1276px; padding: 47px 42px 35px; }
@@ -194,7 +194,7 @@ button { cursor: pointer; }
   .milo-hero h1 { font-size: 57px; }
   .milo-hero-lede { font-size: 16px; margin: 22px 0 28px; }
   .milo-hero-art { min-height: 430px; }
-  .milo-hero-art img { height: 83%; width: 88%; }
+  .milo-hero-character { height: 83%; width: 88%; }
   .milo-speech { bottom: 18px; font-size: 14px; left: 18px; }
   .milo-catalogue-intro { align-items: flex-start; flex-direction: column; gap: 20px; padding: 35px 24px 28px; }
   .milo-catalogue-intro h2 { font-size: 48px; }
