@@ -22,7 +22,7 @@ export default function Home() {
           <div className="milo-hero-art" aria-label="Milo, le guide UseInstead">
             <div className="milo-art-label"><span>MILO</span><span>01 / 09</span></div>
             <div className="milo-hero-character" role="img" aria-label="Milo, personnage illustré de UseInstead" />
-            <div className="milo-speech">Je garde le fil.<br /><strong>Tu gardes le contrôle.</strong></div>
+            <div className="milo-speech">Je t’aide à trouver<br /><strong>l’alternative qui te convient.</strong></div>
           </div>
         </section>
         <section id="catalogue" className="milo-catalogue-intro"><div><p className="milo-eyebrow">MILO T’AIDE À TRANCHER</p><h2>Un choix simple,<br /><em>une alternative claire.</em></h2></div><p>Recherche une application. Compare son prix, son alternative et ce qu’elle permet vraiment.</p></section>
