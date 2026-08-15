@@ -27,6 +27,44 @@ export type CatalogueItem = {
 
 export const CATALOGUE_CATEGORIES = ['Tous', 'IA', 'Productivité', 'Design', 'Développement', 'Vidéo', 'Audio', 'Photo', 'Écriture', 'Automatisation', 'Marketing', 'Collaboration', 'Sécurité', 'Finance', 'No-code', 'Utilitaires'] as const;
 
+/** Exemples éditoriaux permanents : ils restent visibles même avant les premières contributions validées. */
+export const CATALOGUE_EXAMPLES: CatalogueItem[] = [
+  {
+    id: 'example-wispr-flow-handy', likesCount: 0, category: 'IA', tags: ['Voix', 'Transcription', 'Desktop'],
+    paidProduct: { name: 'Wispr Flow', price: 'À partir de 12 $/mois', description: 'Dictée vocale rapide pour écrire dans toutes ses applications.', url: 'https://www.wispr.flow' },
+    freeAlternative: { name: 'Handy', type: 'Gratuit', description: 'Une application open source de speech-to-text pour dicter et transcrire localement.', url: 'https://github.com/dkorniichuk/handy' },
+    limits: ['Projet en évolution', 'Compatibilité à vérifier selon le système'], platforms: ['Desktop'], verifiedAt: 'Exemple UseInstead', confidence: 'Aperçu', tone: 'mint',
+  },
+  {
+    id: 'example-claude-code-freebuff', likesCount: 0, category: 'Développement', tags: ['Coding', 'IA', 'Terminal'],
+    paidProduct: { name: 'Claude Code / Codex', price: 'Abonnement ou crédits selon l’outil', description: 'Agents IA capables de lire un projet, modifier des fichiers et exécuter des tâches de développement.', url: 'https://www.anthropic.com/claude-code' },
+    paidProducts: [
+      { name: 'Claude Code', price: 'Abonnement selon le plan', description: 'Agent de développement en terminal.', url: 'https://www.anthropic.com/claude-code' },
+      { name: 'Codex', price: 'Selon le plan OpenAI', description: 'Agent de développement pour construire et corriger du code.', url: 'https://openai.com/codex/' },
+    ],
+    freeAlternative: { name: 'Freebuff', type: 'Gratuit', description: 'Agent de coding gratuit qui donne accès à plusieurs modèles, dont DeepSeek V4 Pro et V4 Flash.', url: 'https://freebuff.ai' },
+    limits: ['Offre susceptible d’évoluer', 'Vérifier les limites d’usage et la confidentialité avant un projet sensible'], platforms: ['Terminal'], verifiedAt: 'Exemple UseInstead', confidence: 'Aperçu', tone: 'blue',
+  },
+  {
+    id: 'example-loom-tella', likesCount: 0, category: 'Vidéo', tags: ['Screencasting', 'Webcam', 'Partage'],
+    paidProduct: { name: 'Loom', price: 'Plan gratuit limité puis abonnement', description: 'Enregistrement d’écran, webcam et partage par lien.', url: 'https://www.loom.com' },
+    freeAlternative: { name: 'Tella', type: 'Essai gratuit', description: 'Alternative de screencasting avec un essai de 7 jours, annoncé sans carte bancaire.', url: 'https://www.tella.tv' },
+    limits: ['L’essai dure 7 jours', 'Les fonctions et conditions peuvent changer'], platforms: ['Web', 'Desktop'], verifiedAt: 'Exemple UseInstead', confidence: 'Aperçu', tone: 'violet',
+  },
+  {
+    id: 'example-camtasia-obs', likesCount: 0, category: 'Vidéo', tags: ['Screencasting', 'Open source', 'Audio'],
+    paidProduct: { name: 'Camtasia', price: 'Licence ou abonnement', description: 'Capture d’écran et montage vidéo avec outils d’édition intégrés.', url: 'https://www.techsmith.com/camtasia.html' },
+    freeAlternative: { name: 'OBS Studio', type: 'Gratuit / Open source', description: 'Enregistrement d’écran, webcam et audio sans filigrane ni limite imposée par le logiciel.', url: 'https://obsproject.com' },
+    limits: ['Montage moins guidé que Camtasia', 'Configuration initiale plus technique'], platforms: ['Windows', 'macOS', 'Linux'], verifiedAt: 'Exemple UseInstead', confidence: 'Aperçu', tone: 'coral',
+  },
+  {
+    id: 'example-hostinger-aws', likesCount: 0, category: 'Développement', tags: ['Cloud', 'Hébergement', 'Crédit gratuit'],
+    paidProduct: { name: 'Hostinger', price: 'Abonnement d’hébergement', description: 'Hébergement web et infrastructure simplifiée pour publier un site.', url: 'https://www.hostinger.com' },
+    freeAlternative: { name: 'AWS Free Tier', type: 'Crédit nouveau compte', description: 'Pour les nouveaux clients, AWS annonce jusqu’à 200 $ de crédits et un plan gratuit limité dans le temps.', url: 'https://aws.amazon.com/free/' },
+    limits: ['Réservé aux nouveaux clients éligibles', 'Un moyen de paiement valide est demandé', 'Surveiller les limites et la date d’expiration'], platforms: ['Cloud'], verifiedAt: 'Exemple UseInstead', confidence: 'Aperçu', tone: 'amber',
+  },
+];
+
 export const CATALOGUE_PREVIEW: CatalogueItem[] = [
   /* Fixtures historiques conservées pour les tests ; l’interface ne les affiche plus. */
   {

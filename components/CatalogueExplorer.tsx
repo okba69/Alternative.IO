@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { CATALOGUE_CATEGORIES, filterCatalogue, getComparisonDifference, type CatalogueItem } from '@/lib/catalogue';
+import { CATALOGUE_CATEGORIES, CATALOGUE_EXAMPLES, filterCatalogue, getComparisonDifference, type CatalogueItem } from '@/lib/catalogue';
 import { mapDatabasePair, type DatabasePair } from '@/lib/catalogue-db';
 import { getBrowserSupabase } from '@/lib/supabase-browser';
 import { LikeButton } from '@/components/LikeButton';
@@ -11,7 +11,7 @@ export function CatalogueExplorer() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('Tous');
   const [sort, setSort] = useState<'recent' | 'popular'>('popular');
-  const [items, setItems] = useState<CatalogueItem[]>([]);
+  const [items, setItems] = useState<CatalogueItem[]>(CATALOGUE_EXAMPLES);
 
   useEffect(() => {
     let active = true;
@@ -30,7 +30,7 @@ export function CatalogueExplorer() {
           const counts = new Map<string, number>((likes as { pair_id: string; like_count: number }[]).map((like) => [like.pair_id, Number(like.like_count)]));
           for (const item of mapped) item.likesCount = counts.get(item.id) ?? 0;
         }
-        setItems(mapped);
+        setItems([...CATALOGUE_EXAMPLES, ...mapped]);
       } catch {
         // Le catalogue de démonstration reste visible si Supabase n’est pas configuré.
       }
