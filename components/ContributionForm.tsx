@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { getBrowserSupabase } from '@/lib/supabase-browser';
 
 const CATEGORIES = ['IA', 'Productivité', 'Design', 'Développement', 'Vidéo', 'Audio', 'Photo', 'Écriture', 'Automatisation', 'Marketing', 'Collaboration', 'Sécurité', 'Finance', 'No-code', 'Utilitaires'];
 type PaidProduct = { name: string; url: string; amount: string; currency: 'EUR' | 'USD' | 'GBP'; billing: 'monthly' | 'annual'; description: string };
@@ -18,18 +17,11 @@ export function ContributionForm() {
   async function submit(event: React.FormEvent) {
     event.preventDefault(); setState('loading'); setMessage('');
     try {
-      const supabase = getBrowserSupabase();
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) throw sessionError;
-      const user = sessionData.session?.user;
-      if (!user) throw new Error('Ta session Google a expiré. Déconnecte-toi puis reconnecte-toi.');
-      const first = products[0];
       const paidProducts = products.map((product) => ({ name: product.name.trim(), url: product.url.trim(), description: product.description.trim(), price: formatPrice(product), amount: Number(product.amount), currency: product.currency, billing: product.billing }));
-      const payload = { paid_name: first.name.trim(), paid_url: first.url.trim(), paid_description: first.description.trim(), paid_price: formatPrice(first), paid_price_amount: Number(first.amount), paid_currency: first.currency, paid_billing_period: first.billing, paid_products: paidProducts, ...form, tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean), limits: [] as string[], platforms: [] as string[], created_by: user.id };
-      let { error } = await supabase.from('alternative_pairs').insert(payload as never);
-      if (error && (error.code === '42703' || error.message.includes('paid_products') || error.message.includes('paid_price_amount'))) { const legacyPayload = { paid_name: first.name.trim(), paid_url: first.url.trim(), paid_description: first.description.trim(), paid_price: formatPrice(first), alternative_name: form.alternative_name.trim(), alternative_url: form.alternative_url.trim(), alternative_description: form.alternative_description.trim(), alternative_type: form.alternative_type, category: form.category, tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean), limits: [] as string[], platforms: [] as string[], created_by: user.id }; ({ error } = await supabase.from('alternative_pairs').insert(legacyPayload as never)); }
-      if (error) throw error;
-      setState('success'); setMessage('La proposition est envoyée. Elle apparaîtra dans le catalogue après validation.');
+      const response = await fetch('/api/proposals', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ paid_products: paidProducts, ...form, tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean) }) });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error || 'Impossible de publier cette proposition.');
+      setState('success'); setMessage('Proposition reçue. Elle apparaîtra après validation.');
     } catch (error) { setState('error'); setMessage(error instanceof Error ? error.message : 'Impossible de publier cette proposition.'); }
   }
   if (state === 'success') return <p className="form-success">{message}</p>;

@@ -158,10 +158,14 @@ create index if not exists alternative_pairs_created_at_idx
 -- Likes persistés : un like par personne et par comparaison.
 create table if not exists alternative_likes (
   pair_id    uuid not null references alternative_pairs(id) on delete cascade,
-  user_id    uuid not null references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now(),
-  primary key (pair_id, user_id)
+  user_id    uuid references auth.users(id) on delete cascade,
+  visitor_key text,
+  created_at timestamptz not null default now()
 );
+
+alter table alternative_likes add column if not exists visitor_key text;
+create unique index if not exists alternative_likes_user_idx on alternative_likes(pair_id, user_id) where user_id is not null;
+create unique index if not exists alternative_likes_visitor_idx on alternative_likes(pair_id, visitor_key) where visitor_key is not null;
 
 create index if not exists alternative_likes_pair_idx
   on alternative_likes (pair_id);
@@ -180,9 +184,11 @@ create table if not exists requests (
   title       text not null,
   description text not null,
   category    text not null,
-  created_by  uuid not null references auth.users(id) on delete cascade,
+  created_by  uuid references auth.users(id) on delete set null,
   created_at  timestamptz not null default now()
 );
+
+alter table requests alter column created_by drop not null;
 
 create index if not exists requests_created_at_idx
   on requests (created_at desc);

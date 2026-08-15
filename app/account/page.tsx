@@ -1,5 +1,5 @@
-import { AccountPage } from '@/components/AccountPage';
+import { redirect } from 'next/navigation';
 
 export default function AccountRoute() {
-  return <AccountPage />;
+  redirect('/');
 }
