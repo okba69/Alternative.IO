@@ -37,7 +37,8 @@ export default function AuthCallbackPage() {
         const { data, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
         if (!data.session) throw new Error('Session Google introuvable. Réessaie depuis le bouton Google.');
-        router.replace('/catalogue');
+        const next = searchParams.get('next');
+        router.replace(next === '/admin' ? '/admin' : '/catalogue');
       } catch (error) {
         if (active) {
           setMessage(error instanceof Error
