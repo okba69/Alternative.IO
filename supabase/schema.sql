@@ -37,6 +37,7 @@ as $$
 $$;
 
 revoke all on function public.is_admin() from public;
+revoke all on function public.is_admin() from anon;
 grant execute on function public.is_admin() to authenticated;
 
 -- Le rôle ne peut jamais être augmenté depuis l’espace utilisateur. La
@@ -52,6 +53,7 @@ as $$
 $$;
 
 revoke all on function public.current_profile_role() from public;
+revoke all on function public.current_profile_role() from anon;
 grant execute on function public.current_profile_role() to authenticated;
 
 create or replace function public.prevent_profile_role_escalation()
@@ -71,6 +73,8 @@ drop trigger if exists protect_profile_role on profiles;
 create trigger protect_profile_role
 before update on profiles
 for each row execute procedure public.prevent_profile_role_escalation();
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+revoke all on function public.prevent_profile_role_escalation() from public, anon, authenticated;
 drop policy if exists "profiles_owner_read" on profiles;
 create policy "profiles_owner_read" on profiles
   for select to authenticated
@@ -142,6 +146,9 @@ alter table alternative_pairs add column if not exists paid_price_amount numeric
 alter table alternative_pairs add column if not exists paid_currency text not null default 'EUR' check (paid_currency in ('EUR', 'USD', 'GBP'));
 alter table alternative_pairs add column if not exists paid_billing_period text not null default 'monthly' check (paid_billing_period in ('monthly', 'annual'));
 alter table alternative_pairs add column if not exists paid_products jsonb not null default '[]'::jsonb;
+alter table alternative_pairs add column if not exists status text not null default 'pending';
+alter table alternative_pairs drop constraint if exists alternative_pairs_status_check;
+alter table alternative_pairs add constraint alternative_pairs_status_check check (status in ('pending', 'approved', 'rejected'));
 
 create index if not exists alternative_pairs_category_idx
   on alternative_pairs (category);
@@ -210,20 +217,28 @@ alter table requests enable row level security;
 alter table request_comments enable row level security;
 alter table request_proposals enable row level security;
 
- drop policy if exists "catalogue_public_read" on alternative_pairs;
+drop policy if exists "catalogue_public_read" on alternative_pairs;
 create policy "catalogue_public_read" on alternative_pairs
-  for select using (true);
+  for select to anon, authenticated using (status = 'approved');
+
+drop policy if exists "catalogue_owner_read" on alternative_pairs;
+create policy "catalogue_owner_read" on alternative_pairs
+  for select to authenticated using (auth.uid() = created_by);
+
+drop policy if exists "catalogue_admin_read" on alternative_pairs;
+create policy "catalogue_admin_read" on alternative_pairs
+  for select to authenticated using (public.is_admin());
 
  drop policy if exists "catalogue_authenticated_insert" on alternative_pairs;
 create policy "catalogue_authenticated_insert" on alternative_pairs
   for insert to authenticated
-  with check (auth.uid() = created_by);
+  with check (auth.uid() = created_by and status = 'pending');
 
  drop policy if exists "catalogue_owner_update" on alternative_pairs;
 create policy "catalogue_owner_update" on alternative_pairs
   for update to authenticated
-  using (auth.uid() = created_by)
-  with check (auth.uid() = created_by);
+  using (auth.uid() = created_by and status = 'pending')
+  with check (auth.uid() = created_by and status = 'pending');
 
  drop policy if exists "catalogue_owner_delete" on alternative_pairs;
 create policy "catalogue_owner_delete" on alternative_pairs

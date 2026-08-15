@@ -15,6 +15,7 @@ export type DatabasePair = {
   limits?: string[] | null;
   platforms?: string[] | null;
   created_at?: string;
+  status?: 'pending' | 'approved' | 'rejected' | null;
   paid_products?: Array<{ name: string; url: string; description: string; price: string }> | null;
   likes_count?: number;
   liked_by_current_user?: boolean;

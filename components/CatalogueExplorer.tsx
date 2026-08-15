@@ -24,6 +24,7 @@ export function CatalogueExplorer() {
         const { data, error } = await supabase
           .from('alternative_pairs')
           .select('id,paid_name,paid_url,paid_description,paid_price,paid_products,alternative_name,alternative_url,alternative_description,alternative_type,category,tags,limits,platforms,created_at')
+          .eq('status', 'approved')
           .order('created_at', { ascending: false });
         if (!active || error || !data?.length) return;
         const mapped = (data as DatabasePair[]).map((row, index) => mapDatabasePair(row, index));

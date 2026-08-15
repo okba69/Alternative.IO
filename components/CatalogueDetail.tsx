@@ -19,7 +19,7 @@ export function CatalogueDetail({ id }: CatalogueDetailProps) {
     async function loadRemoteItem() {
       try {
         const supabase = getBrowserSupabase();
-        const { data, error } = await supabase.from('alternative_pairs').select('id,paid_name,paid_url,paid_description,paid_price,paid_products,alternative_name,alternative_url,alternative_description,alternative_type,category,tags,limits,platforms,created_at').eq('id', id).maybeSingle();
+        const { data, error } = await supabase.from('alternative_pairs').select('id,paid_name,paid_url,paid_description,paid_price,paid_products,alternative_name,alternative_url,alternative_description,alternative_type,category,tags,limits,platforms,created_at').eq('id', id).eq('status', 'approved').maybeSingle();
         if (active && !error && data) {
           const mapped = mapDatabasePair(data as DatabasePair);
           const { data: likes } = await supabase.from('alternative_like_counts').select('like_count').eq('pair_id', id).maybeSingle();

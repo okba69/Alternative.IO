@@ -29,7 +29,7 @@ export function ContributionForm() {
       let { error } = await supabase.from('alternative_pairs').insert(payload as never);
       if (error && (error.code === '42703' || error.message.includes('paid_products') || error.message.includes('paid_price_amount'))) { const legacyPayload = { paid_name: first.name.trim(), paid_url: first.url.trim(), paid_description: first.description.trim(), paid_price: formatPrice(first), alternative_name: form.alternative_name.trim(), alternative_url: form.alternative_url.trim(), alternative_description: form.alternative_description.trim(), alternative_type: form.alternative_type, category: form.category, tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean), limits: [] as string[], platforms: [] as string[], created_by: user.id }; ({ error } = await supabase.from('alternative_pairs').insert(legacyPayload as never)); }
       if (error) throw error;
-      setState('success'); setMessage('La proposition est publiée dans le catalogue.');
+      setState('success'); setMessage('La proposition est envoyée. Elle apparaîtra dans le catalogue après validation.');
     } catch (error) { setState('error'); setMessage(error instanceof Error ? error.message : 'Impossible de publier cette proposition.'); }
   }
   if (state === 'success') return <p className="form-success">{message}</p>;
