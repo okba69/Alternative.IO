@@ -38,6 +38,8 @@ button { cursor: pointer; }
 .catalogue-intro > p:last-child { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 13px; line-height: 1.6; margin: 0 auto; max-width: 660px; }
 
 .comparison-list-shell { margin: 0 auto; max-width: 1360px; padding: 0 42px 100px; }
+#catalogue { scroll-margin-top: 18px; }
+.catalogue-home #catalogue { border-top: 1px solid #cbc9c0; padding-top: 30px; }
 .comparison-controls { align-items: center; display: flex; gap: 20px; justify-content: space-between; margin-bottom: 20px; }
 .comparison-search { align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 3px; display: flex; gap: 12px; max-width: 540px; padding: 16px 18px; width: 100%; }
 .comparison-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px #087c3e16; }
