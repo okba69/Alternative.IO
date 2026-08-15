@@ -47,7 +47,7 @@ export function CatalogueExplorer() {
   }, [category, items, query, sort]);
 
   return (
-    <section className="comparison-list-shell" aria-label="Catalogue des alternatives">
+    <section id="catalogue" className="comparison-list-shell" aria-label="Catalogue des alternatives">
       <div className="comparison-controls">
         <label className="comparison-search">
           <span aria-hidden="true">⌕</span>

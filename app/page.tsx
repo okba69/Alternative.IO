@@ -63,7 +63,7 @@ export default function Home() {
             <p className="milo-eyebrow">USEINSTEAD / LE BON CHOIX, PLUS VITE</p>
             <h1>Tu n’as pas besoin de payer pour <em>l’essentiel.</em></h1>
             <p className="milo-hero-lede">Milo te donne des alternatives gratuites, open source ou freemium aux outils que tu paies déjà.</p>
-            <div className="milo-hero-actions"><a className="milo-primary-cta" href="#catalogue">Explorer le catalogue <span aria-hidden="true">↗</span></a><Link className="milo-secondary-cta" href="/proposer">Proposer une alternative <span aria-hidden="true">↗</span></Link><span className="milo-note">Une application de partage, enrichie par la communauté.</span></div>
+            <div className="milo-hero-actions"><a className="milo-primary-cta" href="#catalogue">Explorer le catalogue <span aria-hidden="true">↓</span></a><Link className="milo-secondary-cta" href="/proposer">Proposer une alternative <span aria-hidden="true">↗</span></Link><span className="milo-note">Une application de partage, enrichie par la communauté.</span></div>
           </div>
           <div className="milo-hero-art" aria-label="Milo, le guide UseInstead">
             <div className="milo-art-label"><span>MILO</span><span>01 / 09</span></div>
@@ -71,7 +71,6 @@ export default function Home() {
             <DraggableMiloSpeech />
           </div>
         </section>
-        <section id="catalogue" className="milo-catalogue-intro"><div><p className="milo-eyebrow">MILO T’AIDE À TRANCHER</p><h2>Un choix simple,<br /><em>une alternative claire.</em></h2></div><p>Recherche une application. Compare son prix, son alternative et ce qu’elle permet vraiment.</p></section>
         <CatalogueExplorer />
         <section className="catalogue-footer-cta"><span>Tu ne trouves pas ton application ?</span><Link href="/requests">Faire une request <span aria-hidden="true">↗</span></Link></section>
       </main>
