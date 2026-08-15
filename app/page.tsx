@@ -63,7 +63,7 @@ export default function Home() {
             <p className="milo-eyebrow">USEINSTEAD / LE BON CHOIX, PLUS VITE</p>
             <h1>Tu n’as pas besoin de payer pour <em>l’essentiel.</em></h1>
             <p className="milo-hero-lede">Milo te donne des alternatives gratuites, open source ou freemium aux outils que tu paies déjà.</p>
-            <div className="milo-hero-actions"><a className="milo-primary-cta" href="#catalogue">Explorer le catalogue <span aria-hidden="true">↗</span></a><span className="milo-note">Des alternatives utiles, sans le bla-bla.</span></div>
+            <div className="milo-hero-actions"><a className="milo-primary-cta" href="#catalogue">Explorer le catalogue <span aria-hidden="true">↗</span></a><Link className="milo-secondary-cta" href="/proposer">Proposer une alternative <span aria-hidden="true">↗</span></Link><span className="milo-note">Une application de partage, enrichie par la communauté.</span></div>
           </div>
           <div className="milo-hero-art" aria-label="Milo, le guide UseInstead">
             <div className="milo-art-label"><span>MILO</span><span>01 / 09</span></div>
