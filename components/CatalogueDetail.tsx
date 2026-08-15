@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import type { CatalogueItem } from '@/lib/catalogue';
 import { mapDatabasePair, type DatabasePair } from '@/lib/catalogue-db';
 import { getBrowserSupabase } from '@/lib/supabase-browser';
@@ -39,7 +40,7 @@ export function CatalogueDetail({ id }: CatalogueDetailProps) {
   if (!item) return <main className="inner-page"><p className="form-error dark-error">Cette fiche n’existe pas ou n’est pas encore disponible.</p><Link className="text-link" href="/catalogue">← Retour au catalogue</Link></main>;
 
   return <main className="inner-page detail-page">
-    <div className="inner-page-header detail-header"><div><Link className="text-link" href="/catalogue">← Retour au catalogue</Link><p className="eyebrow detail-eyebrow">Comparaison / {item.category}</p><h1>{item.paidProduct.name} <em>→</em> {item.freeAlternative.name}</h1><p className="inner-lede">Une comparaison courte pour comprendre ce que l’alternative couvre et où se trouvent ses limites.</p></div></div>
+    <div className="inner-page-header detail-header"><div><Link className="text-link" href="/catalogue">← Retour au catalogue</Link><p className="eyebrow detail-eyebrow">Comparaison / {item.category}</p><h1>{item.paidProduct.name} <em>→</em> {item.freeAlternative.name}</h1><p className="inner-lede">Une comparaison courte pour comprendre ce que l’alternative couvre et où se trouvent ses limites.</p></div><GoogleAuthButton compact /></div>
     <div className="detail-grid">
       <article className="detail-card paid-detail"><span className="detail-kicker">Outil(s) payant(s)</span>{(item.paidProducts?.length ? item.paidProducts : [item.paidProduct]).map((product) => <div className="paid-detail-product" key={`${product.name}-${product.url}`}><h2><img className="detail-logo" src={`https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(product.url)}&sz=64`} alt="" />{product.name}</h2><p>{product.description}</p><strong>{product.price}</strong><a href={product.url} target="_blank" rel="noreferrer">Voir le site officiel ↗</a></div>)}</article>
       <article className={`detail-card free-detail ${item.tone}`}><span className="detail-kicker">Alternative {item.freeAlternative.type}</span><h2><img className="detail-logo" src={`https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(item.freeAlternative.url)}&sz=64`} alt="" />{item.freeAlternative.name}</h2><p>{item.freeAlternative.description}</p><strong>{item.freeAlternative.type}</strong><a href={item.freeAlternative.url} target="_blank" rel="noreferrer">Voir l’alternative ↗</a></article>
