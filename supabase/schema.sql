@@ -37,6 +37,7 @@ as $$
 $$;
 
 revoke all on function public.is_admin() from public;
+revoke all on function public.is_admin() from anon;
 grant execute on function public.is_admin() to authenticated;
 
 -- Le rôle ne peut jamais être augmenté depuis l’espace utilisateur. La
@@ -52,6 +53,7 @@ as $$
 $$;
 
 revoke all on function public.current_profile_role() from public;
+revoke all on function public.current_profile_role() from anon;
 grant execute on function public.current_profile_role() to authenticated;
 
 create or replace function public.prevent_profile_role_escalation()
@@ -71,6 +73,8 @@ drop trigger if exists protect_profile_role on profiles;
 create trigger protect_profile_role
 before update on profiles
 for each row execute procedure public.prevent_profile_role_escalation();
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+revoke all on function public.prevent_profile_role_escalation() from public, anon, authenticated;
 drop policy if exists "profiles_owner_read" on profiles;
 create policy "profiles_owner_read" on profiles
   for select to authenticated
@@ -138,19 +142,57 @@ create table if not exists alternative_pairs (
   updated_at                 timestamptz not null default now()
 );
 
+alter table alternative_pairs add column if not exists paid_price_amount numeric;
+alter table alternative_pairs add column if not exists paid_currency text not null default 'EUR' check (paid_currency in ('EUR', 'USD', 'GBP'));
+alter table alternative_pairs add column if not exists paid_billing_period text not null default 'monthly' check (paid_billing_period in ('monthly', 'annual'));
+alter table alternative_pairs add column if not exists paid_products jsonb not null default '[]'::jsonb;
+alter table alternative_pairs add column if not exists status text not null default 'pending';
+alter table alternative_pairs drop constraint if exists alternative_pairs_status_check;
+alter table alternative_pairs add constraint alternative_pairs_status_check check (status in ('pending', 'approved', 'rejected'));
+
 create index if not exists alternative_pairs_category_idx
   on alternative_pairs (category);
 create index if not exists alternative_pairs_created_at_idx
   on alternative_pairs (created_at desc);
+
+-- Likes persistés : un like par personne et par comparaison.
+create table if not exists alternative_likes (
+  pair_id    uuid not null references alternative_pairs(id) on delete cascade,
+  user_id    uuid references auth.users(id) on delete cascade,
+  visitor_key text,
+  created_at timestamptz not null default now()
+);
+
+alter table alternative_likes add column if not exists visitor_key text;
+create unique index if not exists alternative_likes_user_idx on alternative_likes(pair_id, user_id) where user_id is not null;
+create unique index if not exists alternative_likes_visitor_idx on alternative_likes(pair_id, visitor_key) where visitor_key is not null;
+
+create index if not exists alternative_likes_pair_idx
+  on alternative_likes (pair_id);
+
+create or replace view public.alternative_like_counts
+with (security_invoker = true)
+as
+  select pair_id, count(*)::int as like_count
+  from public.alternative_likes
+  group by pair_id;
+
+grant select on public.alternative_like_counts to anon, authenticated;
 
 create table if not exists requests (
   id          uuid primary key default gen_random_uuid(),
   title       text not null,
   description text not null,
   category    text not null,
-  created_by  uuid not null references auth.users(id) on delete cascade,
+  created_by  uuid references auth.users(id) on delete set null,
+  status      text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   created_at  timestamptz not null default now()
 );
+
+alter table requests alter column created_by drop not null;
+alter table requests add column if not exists status text not null default 'pending';
+alter table requests drop constraint if exists requests_status_check;
+alter table requests add constraint requests_status_check check (status in ('pending', 'approved', 'rejected'));
 
 create index if not exists requests_created_at_idx
   on requests (created_at desc);
@@ -180,24 +222,33 @@ create index if not exists request_proposals_request_idx
   on request_proposals (request_id, created_at asc);
 
 alter table alternative_pairs enable row level security;
+alter table alternative_likes enable row level security;
 alter table requests enable row level security;
 alter table request_comments enable row level security;
 alter table request_proposals enable row level security;
 
- drop policy if exists "catalogue_public_read" on alternative_pairs;
+drop policy if exists "catalogue_public_read" on alternative_pairs;
 create policy "catalogue_public_read" on alternative_pairs
-  for select using (true);
+  for select to anon, authenticated using (status = 'approved');
+
+drop policy if exists "catalogue_owner_read" on alternative_pairs;
+create policy "catalogue_owner_read" on alternative_pairs
+  for select to authenticated using (auth.uid() = created_by);
+
+drop policy if exists "catalogue_admin_read" on alternative_pairs;
+create policy "catalogue_admin_read" on alternative_pairs
+  for select to authenticated using (public.is_admin());
 
  drop policy if exists "catalogue_authenticated_insert" on alternative_pairs;
 create policy "catalogue_authenticated_insert" on alternative_pairs
   for insert to authenticated
-  with check (auth.uid() = created_by);
+  with check (auth.uid() = created_by and status = 'pending');
 
  drop policy if exists "catalogue_owner_update" on alternative_pairs;
 create policy "catalogue_owner_update" on alternative_pairs
   for update to authenticated
-  using (auth.uid() = created_by)
-  with check (auth.uid() = created_by);
+  using (auth.uid() = created_by and status = 'pending')
+  with check (auth.uid() = created_by and status = 'pending');
 
  drop policy if exists "catalogue_owner_delete" on alternative_pairs;
 create policy "catalogue_owner_delete" on alternative_pairs
@@ -215,9 +266,27 @@ create policy "catalogue_admin_delete" on alternative_pairs
   for delete to authenticated
   using (public.is_admin());
 
+drop policy if exists "likes_public_read" on alternative_likes;
+create policy "likes_public_read" on alternative_likes
+  for select using (true);
+
+drop policy if exists "likes_owner_insert" on alternative_likes;
+create policy "likes_owner_insert" on alternative_likes
+  for insert to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "likes_owner_delete" on alternative_likes;
+create policy "likes_owner_delete" on alternative_likes
+  for delete to authenticated
+  using (auth.uid() = user_id);
+
  drop policy if exists "requests_public_read" on requests;
 create policy "requests_public_read" on requests
-  for select using (true);
+  for select using (status = 'approved');
+
+drop policy if exists "requests_admin_read" on requests;
+create policy "requests_admin_read" on requests
+  for select to authenticated using (public.is_admin());
 
  drop policy if exists "requests_authenticated_insert" on requests;
 create policy "requests_authenticated_insert" on requests

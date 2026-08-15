@@ -1,5 +1,8 @@
 export type CatalogueItem = {
   id: string;
+  createdAt?: string;
+  likesCount: number;
+  likedByCurrentUser?: boolean;
   category: string;
   tags: string[];
   paidProduct: {
@@ -8,6 +11,7 @@ export type CatalogueItem = {
     description: string;
     url: string;
   };
+  paidProducts?: Array<{ name: string; price: string; description: string; url: string }>;
   freeAlternative: {
     name: string;
     type: string;
@@ -21,18 +25,13 @@ export type CatalogueItem = {
   tone: 'mint' | 'amber' | 'blue' | 'coral' | 'violet' | 'sand';
 };
 
-export const CATALOGUE_CATEGORIES = [
-  'Tous',
-  'IA',
-  'Productivité',
-  'Design',
-  'Développement',
-  'Vidéo',
-] as const;
+export const CATALOGUE_CATEGORIES = ['Tous', 'IA', 'Productivité', 'Design', 'Développement', 'Vidéo', 'Audio', 'Photo', 'Écriture', 'Automatisation', 'Marketing', 'Collaboration', 'Sécurité', 'Finance', 'No-code', 'Utilitaires'] as const;
 
 export const CATALOGUE_PREVIEW: CatalogueItem[] = [
+  /* Fixtures historiques conservées pour les tests ; l’interface ne les affiche plus. */
   {
     id: 'wispr-flow-handy',
+    likesCount: 0,
     category: 'IA',
     tags: ['Voix', 'Desktop'],
     paidProduct: {
@@ -55,6 +54,7 @@ export const CATALOGUE_PREVIEW: CatalogueItem[] = [
   },
   {
     id: 'figma-penpot',
+    likesCount: 0,
     category: 'Design',
     tags: ['Design', 'Web'],
     paidProduct: {
@@ -77,6 +77,7 @@ export const CATALOGUE_PREVIEW: CatalogueItem[] = [
   },
   {
     id: 'notion-appflowy',
+    likesCount: 0,
     category: 'Productivité',
     tags: ['Notes', 'Open source'],
     paidProduct: {
@@ -99,6 +100,7 @@ export const CATALOGUE_PREVIEW: CatalogueItem[] = [
   },
   {
     id: 'postman-bruno',
+    likesCount: 0,
     category: 'Développement',
     tags: ['API', 'Local'],
     paidProduct: {
@@ -121,6 +123,7 @@ export const CATALOGUE_PREVIEW: CatalogueItem[] = [
   },
   {
     id: 'descript-kapwing',
+    likesCount: 0,
     category: 'Vidéo',
     tags: ['Vidéo', 'Sous titres'],
     paidProduct: {
@@ -143,6 +146,7 @@ export const CATALOGUE_PREVIEW: CatalogueItem[] = [
   },
   {
     id: 'zapier-n8n',
+    likesCount: 0,
     category: 'Productivité',
     tags: ['Automatisation', 'Self hosted'],
     paidProduct: {

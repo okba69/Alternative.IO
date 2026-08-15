@@ -6,9 +6,10 @@ import type { User } from '@supabase/supabase-js';
 
 type GoogleAuthButtonProps = {
   compact?: boolean;
+  redirectPath?: string;
 };
 
-export function GoogleAuthButton({ compact = false }: GoogleAuthButtonProps) {
+export function GoogleAuthButton({ compact = false, redirectPath = '/catalogue' }: GoogleAuthButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [user, setUser] = useState<User | null>(null);
@@ -53,7 +54,7 @@ export function GoogleAuthButton({ compact = false }: GoogleAuthButtonProps) {
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
         },
       });
       if (authError) throw authError;
