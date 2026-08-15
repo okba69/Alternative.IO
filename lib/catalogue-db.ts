@@ -15,6 +15,9 @@ export type DatabasePair = {
   limits?: string[] | null;
   platforms?: string[] | null;
   created_at?: string;
+  paid_products?: Array<{ name: string; url: string; description: string; price: string }> | null;
+  likes_count?: number;
+  liked_by_current_user?: boolean;
 };
 
 const TONES: CatalogueItem['tone'][] = ['mint', 'amber', 'blue', 'coral', 'violet', 'sand'];
@@ -22,6 +25,9 @@ const TONES: CatalogueItem['tone'][] = ['mint', 'amber', 'blue', 'coral', 'viole
 export function mapDatabasePair(row: DatabasePair, index = 0): CatalogueItem {
   return {
     id: row.id,
+    createdAt: row.created_at,
+    likesCount: row.likes_count ?? 0,
+    likedByCurrentUser: row.liked_by_current_user ?? false,
     category: row.category,
     tags: row.tags ?? [],
     paidProduct: {
@@ -30,6 +36,7 @@ export function mapDatabasePair(row: DatabasePair, index = 0): CatalogueItem {
       description: row.paid_description,
       url: row.paid_url,
     },
+    paidProducts: row.paid_products ?? undefined,
     freeAlternative: {
       name: row.alternative_name,
       type: row.alternative_type,

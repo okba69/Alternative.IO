@@ -138,10 +138,35 @@ create table if not exists alternative_pairs (
   updated_at                 timestamptz not null default now()
 );
 
+alter table alternative_pairs add column if not exists paid_price_amount numeric;
+alter table alternative_pairs add column if not exists paid_currency text not null default 'EUR' check (paid_currency in ('EUR', 'USD', 'GBP'));
+alter table alternative_pairs add column if not exists paid_billing_period text not null default 'monthly' check (paid_billing_period in ('monthly', 'annual'));
+alter table alternative_pairs add column if not exists paid_products jsonb not null default '[]'::jsonb;
+
 create index if not exists alternative_pairs_category_idx
   on alternative_pairs (category);
 create index if not exists alternative_pairs_created_at_idx
   on alternative_pairs (created_at desc);
+
+-- Likes persistés : un like par personne et par comparaison.
+create table if not exists alternative_likes (
+  pair_id    uuid not null references alternative_pairs(id) on delete cascade,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (pair_id, user_id)
+);
+
+create index if not exists alternative_likes_pair_idx
+  on alternative_likes (pair_id);
+
+create or replace view public.alternative_like_counts
+with (security_invoker = true)
+as
+  select pair_id, count(*)::int as like_count
+  from public.alternative_likes
+  group by pair_id;
+
+grant select on public.alternative_like_counts to anon, authenticated;
 
 create table if not exists requests (
   id          uuid primary key default gen_random_uuid(),
@@ -180,6 +205,7 @@ create index if not exists request_proposals_request_idx
   on request_proposals (request_id, created_at asc);
 
 alter table alternative_pairs enable row level security;
+alter table alternative_likes enable row level security;
 alter table requests enable row level security;
 alter table request_comments enable row level security;
 alter table request_proposals enable row level security;
@@ -214,6 +240,20 @@ drop policy if exists "catalogue_admin_delete" on alternative_pairs;
 create policy "catalogue_admin_delete" on alternative_pairs
   for delete to authenticated
   using (public.is_admin());
+
+drop policy if exists "likes_public_read" on alternative_likes;
+create policy "likes_public_read" on alternative_likes
+  for select using (true);
+
+drop policy if exists "likes_owner_insert" on alternative_likes;
+create policy "likes_owner_insert" on alternative_likes
+  for insert to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "likes_owner_delete" on alternative_likes;
+create policy "likes_owner_delete" on alternative_likes
+  for delete to authenticated
+  using (auth.uid() = user_id);
 
  drop policy if exists "requests_public_read" on requests;
 create policy "requests_public_read" on requests

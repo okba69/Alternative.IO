@@ -13,6 +13,12 @@ export function getBrowserSupabase() {
     throw new Error('Connexion Google non configurée.');
   }
 
-  browserClient ??= createClient(url, key);
+  browserClient ??= createClient(url, key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  });
   return browserClient;
 }
