@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { getBrowserSupabase } from '@/lib/supabase-browser';
 
-type LikeButtonProps = { pairId: string; initialCount: number; initialLiked?: boolean };
+type LikeButtonProps = { pairId: string; initialCount: number; initialLiked?: boolean; compact?: boolean };
 
-export function LikeButton({ pairId, initialCount, initialLiked = false }: LikeButtonProps) {
+export function LikeButton({ pairId, initialCount, initialLiked = false, compact = false }: LikeButtonProps) {
   const [count, setCount] = useState(initialCount);
   const [liked, setLiked] = useState(initialLiked);
   const [busy, setBusy] = useState(false);
@@ -32,5 +32,5 @@ export function LikeButton({ pairId, initialCount, initialLiked = false }: LikeB
     } finally { setBusy(false); }
   }
 
-  return <span className="like-control"><button type="button" className={liked ? 'like-button liked' : 'like-button'} onClick={() => void toggleLike()} disabled={busy} aria-pressed={liked} aria-label={liked ? 'Retirer le like' : 'Aimer cette comparaison'}>{liked ? '♥' : '♡'} <span>{count}</span></button>{message && <small role="status">{message}</small>}</span>;
+  return <span className={compact ? 'like-control compact' : 'like-control'}><button type="button" className={liked ? 'like-button liked' : 'like-button'} onClick={() => void toggleLike()} disabled={busy} aria-pressed={liked} aria-label={liked ? 'Retirer le like' : 'Aimer cette comparaison'}>{liked ? '♥' : '♡'} <span>{count}</span></button>{message && <small role="status">{message}</small>}</span>;
 }
