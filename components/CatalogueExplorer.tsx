@@ -10,11 +10,8 @@ import { LikeButton } from '@/components/LikeButton';
 export function CatalogueExplorer() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('Tous');
-  const [tag, setTag] = useState('Tous les tags');
   const [sort, setSort] = useState<'recent' | 'popular'>('popular');
   const [items, setItems] = useState<CatalogueItem[]>([]);
-  const [source, setSource] = useState<'preview' | 'database'>('preview');
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -33,10 +30,7 @@ export function CatalogueExplorer() {
           const counts = new Map<string, number>((likes as { pair_id: string; like_count: number }[]).map((like) => [like.pair_id, Number(like.like_count)]));
           for (const item of mapped) item.likesCount = counts.get(item.id) ?? 0;
         }
-        const tags = [...new Set(mapped.flatMap((item) => item.tags))].sort((a, b) => a.localeCompare(b, 'fr'));
         setItems(mapped);
-        setAvailableTags(tags);
-        setSource('database');
       } catch {
         // Le catalogue de démonstration reste visible si Supabase n’est pas configuré.
       }
@@ -46,11 +40,11 @@ export function CatalogueExplorer() {
   }, []);
 
   const results = useMemo(() => {
-    const filtered = filterCatalogue(items, query, category).filter((item) => tag === 'Tous les tags' || item.tags.includes(tag));
+    const filtered = filterCatalogue(items, query, category);
     return [...filtered].sort((a, b) => sort === 'popular'
       ? b.likesCount - a.likesCount
       : (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
-  }, [category, items, query, sort, tag]);
+  }, [category, items, query, sort]);
 
   return (
     <section className="comparison-list-shell" aria-label="Catalogue des alternatives">
@@ -59,17 +53,13 @@ export function CatalogueExplorer() {
           <span aria-hidden="true">⌕</span>
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher une application…" aria-label="Rechercher une application" />
         </label>
-        <label className="catalogue-category-select">Catégorie <select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filtrer par catégorie">{CATALOGUE_CATEGORIES.map((item) => <option key={item}>{item}</option>)}</select></label>
-      </div>
-
-      <div className="catalogue-toolbar">
-        <div className="catalogue-tags" aria-label="Filtrer par tag">
-          {['Tous les tags', ...availableTags].map((item) => <button key={item} className={tag === item ? 'catalogue-tag active' : 'catalogue-tag'} onClick={() => setTag(item)} type="button">#{item}</button>)}
+        <div className="catalogue-selects">
+          <label className="catalogue-category-select">Catégorie <select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filtrer par catégorie">{CATALOGUE_CATEGORIES.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label className="catalogue-sort">Trier par <select value={sort} onChange={(event) => setSort(event.target.value as 'recent' | 'popular')} aria-label="Trier le catalogue"><option value="popular">Les plus aimées</option><option value="recent">Les plus récentes</option></select></label>
         </div>
-        <label className="catalogue-sort">Trier par <select value={sort} onChange={(event) => setSort(event.target.value as 'recent' | 'popular')}><option value="popular">Les plus aimées</option><option value="recent">Les plus récentes</option></select></label>
       </div>
 
-      <div className="comparison-list-meta"><span>{results.length} alternative{results.length > 1 ? 's' : ''}</span><span>{source === 'database' ? 'Catalogue à jour' : 'Catalogue de démonstration'}</span></div>
+      <div className="comparison-list-meta"><span>{results.length} alternative{results.length > 1 ? 's' : ''}</span><Link className="add-alternative-link" href="/proposer">+ Ajouter une alternative <span aria-hidden="true">↗</span></Link></div>
 
       <div className="comparison-table" role="table" aria-label="Comparaison des outils payants et alternatives">
         <div className="comparison-row comparison-head" role="row">

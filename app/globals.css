@@ -50,6 +50,8 @@ button { cursor: pointer; }
 .comparison-filter { background: transparent; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; padding: 9px 13px; }
 .comparison-filter:hover, .comparison-filter.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .comparison-list-meta { border-bottom: 1px solid var(--line); color: var(--muted); display: flex; font-family: 'DM Mono', monospace; font-size: 10px; justify-content: space-between; letter-spacing: .05em; padding: 9px 0 12px; text-transform: uppercase; }
+.comparison-list-meta .add-alternative-link { color: var(--accent); letter-spacing: .02em; }
+.comparison-list-meta .add-alternative-link:hover { text-decoration: underline; }
 .comparison-table { background: var(--surface); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
 .comparison-row { align-items: center; column-gap: 22px; display: grid; grid-template-columns: 44px minmax(205px, 1.25fr) minmax(135px, .75fr) minmax(205px, 1.15fr) minmax(220px, 1.45fr) minmax(220px, 1.5fr); min-height: 104px; padding: 0 25px; }
 .comparison-head { background: #efede4; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .09em; min-height: 47px; text-transform: uppercase; }
@@ -71,6 +73,7 @@ button { cursor: pointer; }
 .comparison-difference { color: #4f5c51; }
 .comparison-likes { color: var(--accent); display: block; font-family: 'DM Mono', monospace; font-size: 10px; margin-top: 7px; }
 .catalogue-toolbar { align-items: center; display: flex; gap: 18px; justify-content: space-between; margin: 0 0 18px; }
+.catalogue-selects { display: flex; gap: 8px; margin-left: auto; }
 .catalogue-tags { display: flex; flex-wrap: wrap; gap: 7px; }
 .catalogue-tag { background: transparent; border: 0; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; padding: 5px 0; }
 .catalogue-tag:hover, .catalogue-tag.active { color: var(--accent); }

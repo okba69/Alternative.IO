@@ -185,10 +185,14 @@ create table if not exists requests (
   description text not null,
   category    text not null,
   created_by  uuid references auth.users(id) on delete set null,
+  status      text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   created_at  timestamptz not null default now()
 );
 
 alter table requests alter column created_by drop not null;
+alter table requests add column if not exists status text not null default 'pending';
+alter table requests drop constraint if exists requests_status_check;
+alter table requests add constraint requests_status_check check (status in ('pending', 'approved', 'rejected'));
 
 create index if not exists requests_created_at_idx
   on requests (created_at desc);
@@ -278,7 +282,11 @@ create policy "likes_owner_delete" on alternative_likes
 
  drop policy if exists "requests_public_read" on requests;
 create policy "requests_public_read" on requests
-  for select using (true);
+  for select using (status = 'approved');
+
+drop policy if exists "requests_admin_read" on requests;
+create policy "requests_admin_read" on requests
+  for select to authenticated using (public.is_admin());
 
  drop policy if exists "requests_authenticated_insert" on requests;
 create policy "requests_authenticated_insert" on requests
