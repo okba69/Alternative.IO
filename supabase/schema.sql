@@ -291,13 +291,13 @@ create policy "requests_admin_read" on requests
  drop policy if exists "requests_authenticated_insert" on requests;
 create policy "requests_authenticated_insert" on requests
   for insert to authenticated
-  with check (auth.uid() = created_by);
+  with check (auth.uid() = created_by and status = 'pending');
 
  drop policy if exists "requests_owner_update" on requests;
 create policy "requests_owner_update" on requests
   for update to authenticated
-  using (auth.uid() = created_by)
-  with check (auth.uid() = created_by);
+  using (auth.uid() = created_by and status = 'pending')
+  with check (auth.uid() = created_by and status = 'pending');
 
  drop policy if exists "requests_owner_delete" on requests;
 create policy "requests_owner_delete" on requests

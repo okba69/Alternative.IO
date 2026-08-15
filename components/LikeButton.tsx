@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { getBrowserSupabase } from '@/lib/supabase-browser';
 
 type LikeButtonProps = { pairId: string; initialCount: number; initialLiked?: boolean; compact?: boolean };
 
@@ -14,10 +15,18 @@ export function LikeButton({ pairId, initialCount, initialLiked = false, compact
     if (busy) return;
     setBusy(true); setMessage('');
     try {
-      const response = await fetch('/api/likes', { method: liked ? 'DELETE' : 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pair_id: pairId }) });
-      const result = await response.json() as { count?: number; error?: string };
-      if (!response.ok) throw new Error(result.error || 'Impossible d’enregistrer le like.');
-      setCount(result.count ?? count); setLiked(!liked);
+      const supabase = getBrowserSupabase();
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('Connecte-toi pour enregistrer ton like.');
+      if (liked) {
+        const { error } = await supabase.from('alternative_likes').delete().eq('pair_id', pairId).eq('user_id', userData.user.id);
+        if (error) throw error;
+        setCount((value) => Math.max(0, value - 1)); setLiked(false);
+      } else {
+        const { error } = await supabase.from('alternative_likes').insert({ pair_id: pairId, user_id: userData.user.id } as never);
+        if (error) throw error;
+        setCount((value) => value + 1); setLiked(true);
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Impossible d’enregistrer ton like.');
     } finally { setBusy(false); }
