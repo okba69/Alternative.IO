@@ -215,8 +215,13 @@ create table if not exists request_proposals (
   alternative_url  text not null,
   explanation      text not null,
   created_by       uuid not null references auth.users(id) on delete cascade,
+  status           text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   created_at       timestamptz not null default now()
 );
+
+alter table request_proposals add column if not exists status text not null default 'pending';
+alter table request_proposals drop constraint if exists request_proposals_status_check;
+alter table request_proposals add constraint request_proposals_status_check check (status in ('pending', 'approved', 'rejected'));
 
 create index if not exists request_proposals_request_idx
   on request_proposals (request_id, created_at asc);
@@ -331,12 +336,27 @@ create policy "comments_owner_delete" on request_comments
 
  drop policy if exists "proposals_public_read" on request_proposals;
 create policy "proposals_public_read" on request_proposals
-  for select using (true);
+  for select using (status = 'approved');
+
+drop policy if exists "proposals_admin_read" on request_proposals;
+create policy "proposals_admin_read" on request_proposals
+  for select to authenticated using (public.is_admin());
 
  drop policy if exists "proposals_authenticated_insert" on request_proposals;
 create policy "proposals_authenticated_insert" on request_proposals
   for insert to authenticated
-  with check (auth.uid() = created_by);
+  with check (auth.uid() = created_by and status = 'pending');
+
+drop policy if exists "proposals_admin_update" on request_proposals;
+create policy "proposals_admin_update" on request_proposals
+  for update to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "proposals_admin_delete" on request_proposals;
+create policy "proposals_admin_delete" on request_proposals
+  for delete to authenticated
+  using (public.is_admin());
 
  drop policy if exists "proposals_owner_delete" on request_proposals;
 create policy "proposals_owner_delete" on request_proposals

@@ -24,7 +24,7 @@ export function RequestDetail({ requestId }: RequestDetailProps) {
       const [requestResult, commentsResult, proposalsResult] = await Promise.all([
         supabase.from('requests').select('id,title,description,category,created_at').eq('id', requestId).maybeSingle(),
         supabase.from('request_comments').select('id,request_id,body,created_at').eq('request_id', requestId).order('created_at', { ascending: true }),
-        supabase.from('request_proposals').select('id,request_id,alternative_name,alternative_url,explanation,created_at').eq('request_id', requestId).order('created_at', { ascending: true }),
+        supabase.from('request_proposals').select('id,request_id,alternative_name,alternative_url,explanation,created_at').eq('request_id', requestId).eq('status', 'approved').order('created_at', { ascending: true }),
       ]);
       if (requestResult.error) throw requestResult.error;
       if (!requestResult.data) throw new Error('Request introuvable.');
@@ -69,9 +69,10 @@ export function RequestDetail({ requestId }: RequestDetailProps) {
     setSubmitting(true); setMessage('');
     try {
       const userId = await requireUser();
-      const { error } = await getBrowserSupabase().from('request_proposals').insert({ ...proposal, request_id: requestId, created_by: userId } as never);
+      const { error } = await getBrowserSupabase().from('request_proposals').insert({ ...proposal, request_id: requestId, created_by: userId, status: 'pending' } as never);
       if (error) throw error;
       setProposal({ alternative_name: '', alternative_url: '', explanation: '' });
+      setMessage('Réponse envoyée pour validation.');
       await loadRequest();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Proposition impossible à publier.');
