@@ -158,6 +158,10 @@ button { cursor: pointer; }
 .form-message, .form-error, .form-success { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; line-height: 1.5; margin: 14px 0 0; }
 .form-error { color: var(--coral); }
 .form-success { color: var(--accent); }
+.auth-required { background: var(--surface); border: 1px solid var(--line); display: grid; gap: 12px; padding: 25px; }
+.auth-required h2 { font-family: 'Space Grotesk', sans-serif; font-size: 30px; letter-spacing: -.06em; margin: 0; }
+.auth-required p:not(.account-kicker) { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; line-height: 1.6; margin: 0 0 5px; max-width: 620px; }
+.auth-required .google-auth-wrap { margin-top: 5px; }
 .contribution-form { gap: 20px; }
 .form-section-title { align-items: center; border-bottom: 1px solid var(--line); display: flex; gap: 12px; padding-bottom: 12px; }
 .form-section-title span { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 10px; }
