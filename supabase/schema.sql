@@ -212,7 +212,7 @@ create table if not exists request_proposals (
   id               uuid primary key default gen_random_uuid(),
   request_id       uuid not null references requests(id) on delete cascade,
   alternative_name text not null,
-  alternative_url  text not null,
+  alternative_url  text,
   explanation      text not null,
   created_by       uuid not null references auth.users(id) on delete cascade,
   status           text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
@@ -220,6 +220,7 @@ create table if not exists request_proposals (
 );
 
 alter table request_proposals add column if not exists status text not null default 'pending';
+alter table request_proposals alter column alternative_url drop not null;
 alter table request_proposals drop constraint if exists request_proposals_status_check;
 alter table request_proposals add constraint request_proposals_status_check check (status in ('pending', 'approved', 'rejected'));
 
