@@ -9,8 +9,8 @@ import { isAdminRole } from '@/lib/access';
 type Status = 'pending' | 'approved' | 'rejected';
 type AdminProfile = { id: string; display_name: string | null; role: string; created_at: string };
 type AdminPair = { id: string; paid_name: string; alternative_name: string; category: string; status: Status; created_at: string };
-type AdminRequest = { id: string; title: string; category: string; status: Status; created_at: string };
-type AdminProposal = { id: string; request_id: string; alternative_name: string; explanation: string; status: Status; created_at: string };
+type AdminRequest = { id: string; title: string; description: string; category: string; status: Status; created_at: string };
+type AdminProposal = { id: string; request_id: string; alternative_name: string; alternative_url: string | null; explanation: string; status: Status; created_at: string };
 type AdminTab = 'alternatives' | 'requests' | 'responses' | 'catalogue' | 'profiles';
 
 const TABS: Array<{ id: AdminTab; label: string; kicker: string }> = [
@@ -50,8 +50,8 @@ export function AdminPage() {
       const [profilesResult, pairsResult, requestsResult, proposalsResult] = await Promise.all([
         supabase.from('profiles').select('id,display_name,role,created_at').order('created_at', { ascending: false }),
         supabase.from('alternative_pairs').select('id,paid_name,alternative_name,category,status,created_at').order('created_at', { ascending: false }),
-        supabase.from('requests').select('id,title,category,status,created_at').order('created_at', { ascending: false }),
-        supabase.from('request_proposals').select('id,request_id,alternative_name,explanation,status,created_at').order('created_at', { ascending: false }),
+        supabase.from('requests').select('id,title,description,category,status,created_at').order('created_at', { ascending: false }),
+        supabase.from('request_proposals').select('id,request_id,alternative_name,alternative_url,explanation,status,created_at').order('created_at', { ascending: false }),
       ]);
       if (profilesResult.error || pairsResult.error || requestsResult.error || proposalsResult.error) throw profilesResult.error || pairsResult.error || requestsResult.error || proposalsResult.error;
       setProfiles((profilesResult.data ?? []) as AdminProfile[]);
@@ -106,7 +106,36 @@ export function AdminPage() {
   }
 
   async function updateProposalStatus(id: string, status: 'approved' | 'rejected') {
-    const { error } = await getBrowserSupabase().from('request_proposals').update({ status } as never).eq('id', id);
+    const supabase = getBrowserSupabase();
+    if (status === 'approved') {
+      const proposal = proposals.find((item) => item.id === id);
+      const request = proposal && requests.find((item) => item.id === proposal.request_id);
+      const { data: userData } = await supabase.auth.getUser();
+      if (!proposal || !request || !userData.user) { setMessage('La request liée à cette réponse est introuvable.'); return; }
+      const { error: catalogueError } = await supabase.from('alternative_pairs').insert({
+        request_proposal_id: proposal.id,
+        paid_name: request.title,
+        paid_url: '',
+        paid_description: request.description,
+        paid_price: 'Non précisé',
+        paid_price_amount: null,
+        paid_currency: 'EUR',
+        paid_billing_period: 'monthly',
+        paid_products: [{ name: request.title, url: '', description: request.description, price: 'Non précisé' }],
+        alternative_name: proposal.alternative_name,
+        alternative_url: proposal.alternative_url || '',
+        alternative_description: proposal.explanation,
+        alternative_type: 'Gratuit',
+        category: request.category,
+        tags: ['Request'],
+        limits: [],
+        platforms: [],
+        created_by: userData.user.id,
+        status: 'approved',
+      } as never);
+      if (catalogueError && catalogueError.code !== '23505') { setMessage('La réponse n’a pas pu devenir une alternative catalogue.'); return; }
+    }
+    const { error } = await supabase.from('request_proposals').update({ status } as never).eq('id', id);
     if (error) { setMessage('Modification refusée par les règles de sécurité.'); return; }
     setProposals((items) => items.map((item) => item.id === id ? { ...item, status } : item));
     setMessage(status === 'approved' ? 'Réponse approuvée et visible dans la request.' : 'Réponse refusée.');
@@ -131,7 +160,7 @@ export function AdminPage() {
 
         {tab === 'requests' && <section className="admin-section"><div className="account-section-heading"><div><p className="account-kicker">02 / Requests</p><h2>Validation des requests</h2><p>Une request approuvée devient visible dans l’espace public.</p></div></div><div className="admin-table">{requests.filter((item) => item.status === 'pending').map((item) => <div className="admin-row" key={item.id}><span><strong>{item.title}</strong><small>{item.category} · {statusLabel(item.status)}</small></span><button type="button" onClick={() => void updateRequestStatus(item.id, 'approved')}>Approuver</button><button type="button" onClick={() => void updateRequestStatus(item.id, 'rejected')}>Refuser</button><button type="button" onClick={() => void deleteRequest(item.id)}>Supprimer</button></div>)}{requests.filter((item) => item.status === 'pending').length === 0 && <p className="account-empty-line">Aucune request en attente.</p>}</div></section>}
 
-        {tab === 'responses' && <section className="admin-section"><div className="account-section-heading"><div><p className="account-kicker">03 / Réponses</p><h2>Validation des réponses</h2><p>Une réponse approuvée devient visible dans la request concernée.</p></div></div><div className="admin-table">{proposals.filter((item) => item.status === 'pending').map((item) => <div className="admin-row" key={item.id}><span><strong>{item.alternative_name}</strong><small>{item.explanation} · {statusLabel(item.status)}</small></span><button type="button" onClick={() => void updateProposalStatus(item.id, 'approved')}>Approuver</button><button type="button" onClick={() => void updateProposalStatus(item.id, 'rejected')}>Refuser</button><Link href={`/requests/${item.request_id}`}>Voir la request</Link><button type="button" onClick={() => void deleteProposal(item.id)}>Supprimer</button></div>)}{proposals.filter((item) => item.status === 'pending').length === 0 && <p className="account-empty-line">Aucune réponse en attente.</p>}</div></section>}
+        {tab === 'responses' && <section className="admin-section"><div className="account-section-heading"><div><p className="account-kicker">03 / Réponses</p><h2>Validation des réponses</h2><p>Une réponse approuvée crée automatiquement une alternative dans le catalogue.</p></div></div><div className="admin-table">{proposals.filter((item) => item.status === 'pending').map((item) => { const request = requests.find((requestItem) => requestItem.id === item.request_id); return <div className="admin-row admin-response-row" key={item.id}><span><strong>Request : {request?.title || 'Request introuvable'}</strong><small>Besoin : {request?.description || 'Non disponible'}</small><small>Réponse : {item.alternative_name} · {item.explanation}</small><small>{item.alternative_url ? `URL : ${item.alternative_url}` : 'URL : non renseignée'} · {statusLabel(item.status)}</small></span><button type="button" onClick={() => void updateProposalStatus(item.id, 'approved')}>Approuver + ajouter au catalogue</button><button type="button" onClick={() => void updateProposalStatus(item.id, 'rejected')}>Refuser</button><Link href={`/requests/${item.request_id}`}>Voir la request</Link><button type="button" onClick={() => void deleteProposal(item.id)}>Supprimer</button></div>; })}{proposals.filter((item) => item.status === 'pending').length === 0 && <p className="account-empty-line">Aucune réponse en attente.</p>}</div></section>}
 
         {tab === 'catalogue' && <section className="admin-section"><div className="account-section-heading"><div><p className="account-kicker">04 / Catalogue</p><h2>Gestion des alternatives</h2><p>Voici toutes les alternatives enregistrées, quel que soit leur statut.</p></div></div><div className="admin-table">{pairs.map((item) => <div className="admin-row" key={item.id}><span><strong>{item.paid_name} → {item.alternative_name}</strong><small>{item.category} · {statusLabel(item.status)}</small></span>{item.status !== 'approved' && <button type="button" onClick={() => void updatePairStatus(item.id, 'approved')}>Publier</button>}<Link href={`/catalogue/${item.id}`}>Voir</Link><button type="button" onClick={() => void deletePair(item.id)}>Supprimer</button></div>)}{pairs.length === 0 && <p className="account-empty-line">Aucune alternative enregistrée.</p>}</div></section>}
 

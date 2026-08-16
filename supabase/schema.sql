@@ -101,7 +101,7 @@ begin
   insert into public.profiles (id, display_name, avatar_url)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name'),
+    coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', new.email),
     new.raw_user_meta_data ->> 'avatar_url'
   )
   on conflict (id) do nothing;
@@ -227,6 +227,8 @@ alter table request_proposals add constraint request_proposals_status_check chec
 create index if not exists request_proposals_request_idx
   on request_proposals (request_id, created_at asc);
 
+alter table alternative_pairs add column if not exists request_proposal_id uuid unique references request_proposals(id) on delete set null;
+
 alter table alternative_pairs enable row level security;
 alter table alternative_likes enable row level security;
 alter table requests enable row level security;
@@ -249,6 +251,11 @@ create policy "catalogue_admin_read" on alternative_pairs
 create policy "catalogue_authenticated_insert" on alternative_pairs
   for insert to authenticated
   with check (auth.uid() = created_by and status = 'pending');
+
+drop policy if exists "catalogue_admin_insert" on alternative_pairs;
+create policy "catalogue_admin_insert" on alternative_pairs
+  for insert to authenticated
+  with check (public.is_admin());
 
  drop policy if exists "catalogue_owner_update" on alternative_pairs;
 create policy "catalogue_owner_update" on alternative_pairs
