@@ -228,6 +228,12 @@ create index if not exists request_proposals_request_idx
   on request_proposals (request_id, created_at asc);
 
 alter table alternative_pairs add column if not exists request_proposal_id uuid unique references request_proposals(id) on delete set null;
+alter table alternative_pairs drop constraint if exists alternative_pairs_submission_requirements;
+alter table alternative_pairs add constraint alternative_pairs_submission_requirements check (
+  request_proposal_id is not null or (
+    paid_url <> '' and alternative_url <> '' and paid_price_amount is not null and paid_price_amount >= 0
+  )
+) not valid;
 
 alter table alternative_pairs enable row level security;
 alter table alternative_likes enable row level security;

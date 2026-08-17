@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { CATALOGUE_CATEGORIES, CATALOGUE_EXAMPLES, filterCatalogue, getComparisonDifference, type CatalogueItem } from '@/lib/catalogue';
+import { CATALOGUE_CATEGORIES, filterCatalogue, getComparisonDifference, type CatalogueItem } from '@/lib/catalogue';
 import { mapDatabasePair, type DatabasePair } from '@/lib/catalogue-db';
 import { getBrowserSupabase } from '@/lib/supabase-browser';
 import { LikeButton } from '@/components/LikeButton';
@@ -11,7 +11,7 @@ export function CatalogueExplorer() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('Tous');
   const [sort, setSort] = useState<'recent' | 'popular'>('popular');
-  const [items, setItems] = useState<CatalogueItem[]>(CATALOGUE_EXAMPLES);
+  const [items, setItems] = useState<CatalogueItem[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -30,7 +30,13 @@ export function CatalogueExplorer() {
           const counts = new Map<string, number>((likes as { pair_id: string; like_count: number }[]).map((like) => [like.pair_id, Number(like.like_count)]));
           for (const item of mapped) item.likesCount = counts.get(item.id) ?? 0;
         }
-        setItems([...CATALOGUE_EXAMPLES, ...mapped]);
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user) {
+          const { data: likedRows } = await supabase.from('alternative_likes').select('pair_id').eq('user_id', userData.user.id);
+          const likedIds = new Set(((likedRows ?? []) as Array<{ pair_id: string }>).map((row) => row.pair_id));
+          for (const item of mapped) item.likedByCurrentUser = likedIds.has(item.id);
+        }
+        setItems(mapped);
       } catch {
         // Le catalogue de démonstration reste visible si Supabase n’est pas configuré.
       }
@@ -72,7 +78,7 @@ export function CatalogueExplorer() {
             <span className="comparison-price-cell" role="cell">{item.paidProduct.price}</span>
             <span className="comparison-alt" role="cell">{item.freeAlternative.url ? <img className="comparison-logo" src={`https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(item.freeAlternative.url)}&sz=64`} alt="" /> : <i className={`comparison-logo ${item.tone}`}>{item.freeAlternative.name.slice(0, 1)}</i>}<strong>{item.freeAlternative.url ? <a href={item.freeAlternative.url} target="_blank" rel="noreferrer">{item.freeAlternative.name} ↗</a> : item.freeAlternative.name}</strong><small>{item.freeAlternative.type}</small></span>
             <span className="comparison-capability" role="cell">{item.freeAlternative.description}</span>
-            <span className="comparison-difference" role="cell">{getComparisonDifference(item)}<small className="comparison-likes">♡ {item.likesCount}</small></span>
+            <span className="comparison-difference" role="cell">{getComparisonDifference(item)}</span>
           </div>
         ))}
       </div>
