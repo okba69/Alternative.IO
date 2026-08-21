@@ -10,6 +10,7 @@
     "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
+    "@hyperframes/core": "^0.8.6",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.110.2",
     "next": "16.2.10",
